@@ -1,5 +1,5 @@
 # Operator-Series-Calculator
-The Ludic Numbers are a sequence described by another sequence of real values between 0 and 1, which I call the operator sequence. This Python program finds such that operator sequence for arbitrary strictly increasing integer sequences (abbreviated to SIIS).
+The Ludic Numbers are a sequence described by another sequence of real values between 0 and 1, which I call the operator sequence. This Python program finds that operator sequence for arbitrary strictly increasing integer sequences (abbreviated to SIIS).
 
 NOTATION:
 Let $\lfloor n \rfloor$ denote the floor function on $n$, $\lceil n \rceil$ denote the ceiling function on $n$, and $\omega$ a number that satisfies

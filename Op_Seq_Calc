@@ -1,0 +1,211 @@
+import math
+
+#These classes designate a rational bound. The 'upper' and 'lower' aspects
+#are split between two classes due to aesthetic choice.
+
+class upperBound:
+    def __init__(self, n, d):
+        self.n = n
+        self.d = d
+    def __str__(self):
+        return str(self.n/self.d)
+        
+class lowerBound:
+    def __init__(self, n, d):
+        self.n = n
+        self.d = d
+    def __str__(self):
+        return str(self.n/self.d)
+
+
+
+#compares bounds. If new bound is tighter than current bound, returns true.
+#If else, returns false.
+#newBound is nB
+#currentBound is cB
+
+def compare_bounds(currentBound, newBound):
+    if type(newBound) is upperBound:
+        #nB.n/nB.d < cB.n/cB.d
+        #some algebra gives this \/ \/ \/
+        if newBound.n * currentBound.d < currentBound.n * newBound.d:
+            return True
+        else:
+            return False
+    
+    if type(newBound) is lowerBound:
+        #nB.n/nB.d > cB.n/cB.d
+        #some algebra gives this \/ \/ \/
+        if newBound.n*currentBound.d > currentBound.n*newBound.d:
+            return True
+        else:
+            return False
+    
+    if type(newBound) != type(currentBound):
+        return False #don't change anything
+      
+      
+      
+#Given a correct mapping, gives upper bound. len(seq)=len(maps)
+#A correct mapping is one where there exists b where
+# maps[i]        maps[i]
+# ------- <= b < --------
+# seq[i]         seq[i]-1
+#for all i. 
+
+def bounds_correct_upper(seq, maps):
+    current_upper = upperBound(1,1)
+    bounds = []
+    for i in range(1,len(maps)):
+        bounds.append(upperBound(maps[i],seq[i]-1))
+    
+    for i in range(len(bounds)):
+        if compare_bounds(current_upper, bounds[i]):
+            current_upper = bounds[i]
+    return current_upper
+    
+#Given a correct mapping, gives lower bound. len(seq)=len(maps)
+def bounds_correct_lower(seq, maps):
+    current_lower = lowerBound(0,1)
+    bounds = []
+    for i in range(1,len(maps)):
+        bounds.append(lowerBound(maps[i],seq[i]))
+    
+    for i in range(len(bounds)):
+        if compare_bounds(current_lower, bounds[i]):
+            current_lower = bounds[i]
+    return current_lower
+
+"""
+Notes on the bounds functions:
+It seems that they are very well equipped to look for contradictory bounds.
+If the mapping is too low, the bounds overlap with some correlation to the
+closeness of bounds being related to closeness to a correct mapping.
+Consider [1,4,9]->[0,2,4] and [1,4,9]->[0,2,5]. The first is incorrect and
+gives bounds both equal to 1/2 while the other has nonintersecting bounds.
+Looking at [1,4,9]->[0,2,3]. we get an upper bound of 3/8 and a lower bound of
+2/4. This is likely a bit of a cherrypicked example but the principle still
+stands in general.
+Further, I think the algorithm may be as simple as comparing the bounds and
+seeing if they intersect. If they do, change the current mapping within bounds.
+"""
+
+#Using the bounds_correct functions, constructs a mapping for a sequence and
+#bounds for a beta to achieve that mapping. Assumes that the first element in
+#all sequences is a 1 and maps that to 0.
+#Given the bounds up to some point are correct, we find integer bounds for the
+#next sequence member's mapping and update bounds. Repeat until the entire
+#sequence is mapped or we contradict ourselves.
+#If we contradict ourselves, we iterate the current element unless we move out 
+#of bounds. If thats the case, we go back to our previous mapping and iterate.
+#Repeat *this* until we get through the entire sequence.
+
+def compute_mapping(seq):
+    iter = 1
+    mapp = [0]
+    while(iter < len(seq)):
+        currentUpper = bounds_correct_upper(seq[0:iter],mapp[0:iter])
+        currentLower = bounds_correct_lower(seq[0:iter],mapp[0:iter])
+        mapUpper = math.ceil(seq[iter]*currentUpper.n/currentUpper.d)-1
+        mapLower = math.ceil(seq[iter]*currentLower.n/currentLower.d)
+
+        if mapLower <= mapp[iter-1]:
+            mapLower = mapp[iter-1]+1
+        if len(mapp)-1<iter:
+            mapp.append(mapLower)
+        else:
+            if iter < len(seq):
+                mapp[iter] += 1
+        
+        #update bounds
+        newUpper = upperBound(mapp[len(mapp)-1],seq[len(mapp)-1]-1)
+        newLower = lowerBound(mapp[len(mapp)-1],seq[len(mapp)-1])
+        #print(mapp)
+        
+        if compare_bounds(currentUpper, newUpper):
+            currentUpper = newUpper
+        if compare_bounds(currentLower, newLower):
+            currentLower = newLower
+            
+        #1. if mapp[iter] > mapUpper, deiterate
+        #2. if bounds overlap, deiterate (this is implied by 1.)
+        #3. if mappUpper < mappLower, deiterate (this is implied by 1.)
+        if iter < len(seq):
+            if mapp[iter] > mapUpper:
+                if mapp != [0]:
+                    mapp.pop()
+                    iter -= 1
+            else:
+                iter += 1
+    return mapp
+
+#Given a lowerBound and a sequence, computes that sequence times the lower
+#bound rounded down. Care is taken to prevent floating point errors.
+def manual_compute(lower, seq):
+    #Given floor(beta * a)=b where beta = A/B
+    #Look for b such that Bb <= Aa < B(b+1)
+    mapp = []
+    for i in range(len(seq)):
+        target = lower.n * seq[i]
+        j = math.floor(seq[i]*lower.n/lower.d)
+        while(lower.d * (j+1) <= target):
+            j += 1
+        mapp.append(j)
+    return mapp
+
+#put sequence in here
+#\/ \/ \/
+
+sequence = []
+for i in range(34):
+    sequence.append(math.floor(0.5+3.5**i))
+
+#NOTE: For best proformance, trivial sequences do best when max is less than 
+#1,000,000,000. Since trivial sequences are the worst preforming type of
+#sequence, a good rule of thumb is to keep the max below 10^9. If the max is too high,
+#program may take a while to print anything.
+
+#For powers of a number, it seems to vary, almost randomly. However, if y is the
+#max power and x is our exponent then for the first 16 exponents, we have a line
+#of best fit of
+#     A + Bx
+#y ~ -------
+#     log x
+#with A ~ 16.69219, B ~ 0.198853, and where log(x) is the base 10 logarithm.
+#RMSE = 0.6629.
+
+
+print(sequence)
+print()
+#//////////////////////////////////
+
+lambs = []
+upper = []
+lower = []
+
+#//////////////////////////////////
+while(len(sequence) > 1):
+    lambs.append(sequence[0]-1)
+    
+    for i in range(len(sequence)):
+        sequence[i] -= lambs[len(lambs)-1]
+    try:
+        mapp = compute_mapping(sequence)
+        #!!!!NOTE!!!!
+        #Will throw IndexError when sequence is not strictly increasing
+    except IndexError:
+        print("This sequence is not strictly increasing! Stopping program.")
+        break
+    
+    ub = bounds_correct_upper(sequence,mapp)
+    lb = bounds_correct_lower(sequence,mapp)
+    upper.append(ub)
+    lower.append(lb)
+    
+    print("Lambda" + str(len(lambs)-1) +": " + str(lambs[len(lambs)-1]))
+    print("Lower bound: " + str(lb.n) +" / "+ str(lb.d) + " = " + str(lb))
+    print("Upper bound: " + str(ub.n) +" / "+ str(ub.d) + " = " + str(ub))
+    #print(mapp)
+    print()
+    sequence = mapp
+    sequence.remove(0)
