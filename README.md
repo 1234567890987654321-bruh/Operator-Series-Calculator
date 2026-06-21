@@ -9,7 +9,7 @@ Let $\lfloor n \rfloor$ denote the floor function on $n$, $\lceil n \rceil$ deno
 for all positive integers $n$. Let $a(n)$ denote a strictly increasing integer sequence. This is defined as $a(n)$ being entirely composed of integers and having the property that for all positive integers $n$, $a(n) < a(n+1)$.
 
 THEORY:
-Given $a(n)$, an SIIS, we wish to find a real value $\beta$ such that the $\lfloor \beta a(n) \rfloor$ is injective in terms of $n$ (i.e. $\lfloor \beta a(n) \rfloor \not = \lfloor \beta a(n+1) \rfloor$ for any $n$). Specifically in this context, we also request that $\lceil \frac{1}{\beta} \lfloor \beta a(n) \rfloor \rceil$ for all $n$, that is that we can reverse the floor function. The injective condition demands that if $\lfloor \beta a(n) \rfloor =b(n)$ then
+Given $a(n)$, an SIIS, we wish to find a real value $\beta$ such that $\lfloor \beta a(n) \rfloor$ is injective in terms of $n$ (i.e. $\lfloor \beta a(n) \rfloor \not = \lfloor \beta a(n+1) \rfloor$ for any $n$). Specifically in this context, we also request that $\lceil \frac{1}{\beta} \lfloor \beta a(n) \rfloor \rceil$ for all $n$, that is that we can reverse the floor function. The injective condition demands that if $\lfloor \beta a(n) \rfloor =b(n)$ then
 ```math
 \frac{b(n)}{a(n)} \leq \beta < \frac{b(n)+1}{a(n)}
 ```
@@ -21,7 +21,7 @@ Since for any $b(n)$, we have $b(n) < a(n)$ and so $b(n)/(a(n)-1) \leq (b(n)+1)/
 
 ALGORITHM:
 We are given a(n), a finite list from an SIIS.
-1. Store a(0)-1 as $\lambda. Subtract this value from each element in a(n). This results in the first element of a(n) now being equal to 1.
+1. Store a(0)-1 as $\lambda$. Subtract this value from each element in a(n). This results in the first element of a(n) now being equal to 1.
 2. For any $\beta$ we choose, 1 maps to 0 so we can safely say that the bounds for b are 0 and 1, noninclusive. Store as currentLower and currentUpper respectively. We also designate the current_index = 0. Append 0 to the list of mappings of a(n). Call this list MAP.
 3. (WHILE LOOP STARTED) Iterate the current_index and multiply currentLower and currentUpper by a(current_index). Round up both of these products and subtract 1 from the modified upper bound.
 4. a(current_index) must map to a positive integer in this range (inclusive) in order for the current bounds for b to be satisfied. Append the least integer to MAP decided by the currentLower rounding.
